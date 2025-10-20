@@ -1,0 +1,48 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>实时流式语音识别 Demo（SAUC v3）</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>实时流式语音识别 Demo（桥接到 SAUC v3 bigmodel_async）</h1>
+
+    <div class="card">
+      <label>WebSocket 服务地址：</label>
+      <input id="wsUrl" type="text" value="ws://localhost:8080/ws-asr" />
+      <button id="btnConnect">连接</button>
+      <button id="btnDisconnect" disabled>断开</button>
+    </div>
+
+    <div class="card">
+      <label>麦克风：</label>
+      <button id="btnStartMic" disabled>开始采集</button>
+      <button id="btnStopMic" disabled>停止采集</button>
+      <button id="btnEndSession" disabled>结束会话</button>
+      <div class="note">提示：默认每 200ms 打包一次 PCM16/16kHz/mono 并通过 WebSocket 发送至后端。</div>
+    </div>
+
+    <div class="card">
+      <h3>结果</h3>
+      <div>
+        <label>增量结果（Partial）：</label>
+        <pre id="partialBox" class="box"></pre>
+      </div>
+      <div>
+        <label>最终结果（Final）：</label>
+        <pre id="finalBox" class="box"></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>状态与日志</h3>
+      <pre id="logBox" class="box"></pre>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
