@@ -19,10 +19,45 @@
   const PACKET_SAMPLES = 3200; // 200ms at 16k
   let resampledQueue = [];
 
+  // 动态设置默认的同源 WSS 地址，避免手动填写和跨域/协议问题
+  try {
+    const defaultProto = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+    const defaultWsUrl = defaultProto + location.host + '/ws-asr';
+    wsUrlInput.value = defaultWsUrl;
+  } catch(e) {
+    // ignore
+  }
+
   function log(msg){
     const ts = new Date().toLocaleTimeString();
     logBox.textContent += `[${ts}] ${msg}\n`;
     logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  /**
+   * 获取麦克风 MediaStream 的兼容封装
+   * 输入：options（如 { audio: true }）
+   * 输出：Promise<MediaStream>
+   * 说明：
+   * - 在非安全上下文（非 HTTPS 且主机不是 localhost/127.0.0.1）给出提示
+   * - 优先使用 navigator.mediaDevices.getUserMedia
+   * - 回退到旧版前缀 API（webkit/moz）
+   */
+  function getUserMediaCompat(options){
+    const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (!isSecure){
+      log('当前页面可能不是安全上下文：建议通过 HTTPS 或 localhost/127.0.0.1 访问，否则浏览器可能禁止麦克风访问。');
+    }
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function'){
+      return navigator.mediaDevices.getUserMedia(options);
+    }
+    const legacyGetUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    if (legacyGetUserMedia){
+      return new Promise((resolve, reject) => {
+        try { legacyGetUserMedia.call(navigator, options, resolve, reject); } catch(e){ reject(e); }
+      });
+    }
+    return Promise.reject(new Error('浏览器不支持 getUserMedia 或被策略禁止'));
   }
 
   function enableControls(state){
@@ -83,7 +118,8 @@
   }
 
   function startMic(){
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    // 使用兼容封装，避免在不支持或非安全上下文下直接崩溃
+    getUserMediaCompat({ audio: true }).then(stream => {
       micStream = stream;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: TARGET_RATE });
       srcRate = audioCtx.sampleRate; // actual sampleRate may differ
@@ -164,5 +200,5 @@
 
   enableControls('disconnected');
   log('请先启动后端：python f:\\work\\singa\\spark_asr\\sauc_asr_server.py');
-  log('前端推荐通过本地静态服务器打开以支持麦克风：例如 PowerShell 运行 "python -m http.server 5500 -d F:\\work\\singa\\asr-frontend" 并访问 http://localhost:5500');
+  log('前端推荐通过本地静态服务器打开以支持麦克风：例如 PowerShell 运行 "python -m http.server 8082 -d F:\\work\\singa\\asr-frontend" 并访问 http://localhost:8082');
 })();

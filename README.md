@@ -7,16 +7,16 @@
 1) 启动后端服务（PowerShell）：
 
 ```powershell
-python f:\work\singa\spark_asr\sauc_asr_server.py --host 0.0.0.0 --port 8080
+python f:\work\singa\spark_asr\sauc_asr_server.py --host 0.0.0.0 --port 8081
 ```
 
 2) 启动一个本地静态服务器以支持 getUserMedia（浏览器要求在安全上下文或 localhost）：
 
 ```powershell
-python -m http.server 5500 -d f:\work\singa\asr-frontend
+python -m http.server 8082 -d f:\work\singa\asr-frontend
 ```
 
-3) 打开浏览器访问 `http://localhost:5500`，确认 WebSocket 地址为 `ws://localhost:8080/ws-asr`，点击连接，随后开始采集。
+3) 打开浏览器访问 `http://localhost:8082`，确认 WebSocket 地址为 `ws://localhost:8081/ws-asr`，点击连接，随后开始采集。
 
 4) 说话，观测增量结果和最终结果。结束时点击结束会话。
 
